@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import User from '../models/User.js'
+import Video from '../models/Video.js'
 import { createError } from "../middleware/error.js";
 
 export const updateUser = async (req,res,next) => {
@@ -74,15 +75,34 @@ export const unSubscribe = async (req,res,next) => {
     }
 }
 export const like = async (req,res,next) => {
+    const id = req.user.id
+    const videoId = req.params.videoId
+
     try {
-      
+      await Video.findByIdAndUpdate(videoId, {
+        //$addToSet to make sure you only push the same user id once in the array
+        $addToSet: { likes: id},
+        //remove user id in dislikes array when user liked a video
+        $pull: { dislikes:id}
+      })
+
+      res.status(200).json("Video liked")
     } catch (error) {
         next(error)
     }
 }
 export const dislike = async (req,res,next) => {
+    const id = req.user.id
+    const videoId = req.params.videoId
     try {
-      
+      await Video.findByIdAndUpdate(videoId, {
+        //$addToSet to make sure you only push the same user id once in the array
+        $addToSet: { dislikes: id},
+        //remove user id in likes array when user disliked a video
+        $pull: { likes:id}
+      })
+
+      res.status(200).json("Video disliked")
     } catch (error) {
         next(error)
     }
